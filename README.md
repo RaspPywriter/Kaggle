@@ -1,5 +1,4 @@
 # Kaggle Notebooks
-Titanic Notebook
-This is my first Kaggle project
+Titanic Notebook - First Notebook
 
 #Housing Market
