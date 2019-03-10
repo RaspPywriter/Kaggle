@@ -1,0 +1,131 @@
+# This Python 3 environment comes with many helpful analytics libraries installed
+# It is defined by the kaggle/python docker image: https://github.com/kaggle/docker-python
+# For example, here's several helpful packages to load in 
+#based on tutorial from https://elitedatascience.com/python-seaborn-tutorial
+
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+
+# Input data files are available in the "../input/" directory.
+# For example, running this (by clicking run or pressing Shift+Enter) will list the files in the input directory
+
+import os
+print(os.listdir("../input"))
+from matplotlib import pyplot as plt
+%matplotlib inline
+
+# Any results you write to the current directory are saved as output.
+import seaborn as sns
+train = pd.read_csv('../input/train.csv')
+#check the headings and data
+train.head()
+train.info()
+#map S to 0
+train.loc[train['Embarked'] == 'S', 'Embarked'] = 0
+
+#map C to 1
+train.loc[train['Embarked'] == 'C', 'Embarked'] = 1
+train.loc[train['Sex'] == 'male', 'Sex'] = 0
+#map male to 0
+train.loc[train['Sex'] == 'female', 'Sex'] = 1
+#map female to 1
+#fill in avg age
+train['Age']= train['Age'].fillna('30')
+sns.lmplot(x='Pclass', y='Survived', data=train)
+sns.lmplot(x='Sex', y='Survived', data=train)
+
+#Remove the regression line 
+sns.lmplot(x='Sex', y='Survived', data=train, 
+           fit_reg=False, # No regression line
+           hue='Pclass')   # Color by evolution stage
+           
+#try changing age to numeric
+train[['Age']] = train[['Age']].apply(pd.to_numeric)
+#try changing fare to numeric
+train[['Fare']] = train[['Fare']].apply(pd.to_numeric)
+#wanted to create a more interesting graph, remove regression line and color by survived/not survived 
+sns.lmplot(y='Age', x='Fare', data=train, 
+           fit_reg=False,
+           hue='Survived')   
+           
+sns.lmplot(y='Age', x='Fare', data=train, 
+           fit_reg=False,
+           hue='Survived')   
+ 
+# Adjust axes using matlib -get a close up of the more clustered values
+plt.ylim(0, 50)
+plt.xlim(0, 50)
+
+sns.boxplot(data=train)
+# remove unnecessary columns
+boxplt_df = train.drop(['PassengerId', 'Survived', 'Sex', 'Parch', 'Fare', 'Name'], axis=1)
+ 
+# New boxplot using stats_df
+sns.boxplot(data=boxplt_df)
+# New boxplot using Age only
+sns.boxplot(data=train['Age'])
+# New boxplot using Fare only
+sns.boxplot(data=train['Fare'])
+# Set theme
+sns.set_style('whitegrid')
+ 
+# Violin plot
+sns.violinplot(x='Pclass', y='Age', data=train)
+# Swarm plot 
+sns.swarmplot(x='Pclass', y='Age', data=train)
+# Set figure size with matplotlib
+plt.figure(figsize=(10,6))
+ 
+# Create plot
+sns.violinplot(x='Pclass',
+               y='Age', 
+               data=train, 
+               inner=None) # Remove the bars inside the violins)
+ 
+sns.swarmplot(x='Pclass', 
+              y='Age', 
+              data=train, 
+              color='k', # Make points black
+              alpha=0.7) # and slightly transparent
+# Set title with matplotlib
+plt.title('Passenger Class by Age')
+
+boxplt_df = train.drop(['SibSp', 'PassengerId'], axis=1)
+# Melt DataFrame
+
+melted_df = pd.melt(boxplt_df, # original dataframe
+                    id_vars=["Pclass", "Age"], # Variables to keep as is
+                    var_name="MeltedVar") # Name of melted variable
+melted_df.head()
+# Calculate correlations
+corr = train.corr()
+ 
+# Heatmap
+sns.heatmap(corr)
+# Bar Graph
+sns.countplot(x='Survived', data=train)
+ 
+# Rotate x-labels
+plt.xticks(rotation=-45)
+# Bar Graph
+sns.countplot(x='Pclass', data=train)
+ 
+# Rotate x-labels
+plt.xticks(rotation=-45)
+# Factor Plot
+g = sns.factorplot(x='Age', 
+                   y='Sex', 
+                   data=train, 
+                   hue='Survived',  # Color by stage
+                   col='Survived',  # Separate by stage
+                   kind='swarm') # Swarmplot
+ 
+# Rotate x-axis labels
+g.set_xticklabels(rotation=-45)
+ 
+# Doesn't work because only rotates last plot
+# plt.xticks(rotation=-45)
+# Density Plot
+sns.kdeplot(train.Age, train.Pclass)
+# Joint Distribution Plot
+sns.jointplot(x='Age', y='Pclass', data=train)
