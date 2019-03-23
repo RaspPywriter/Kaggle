@@ -1,0 +1,88 @@
+# This Python 3 environment comes with many helpful analytics libraries installed
+# It is defined by the kaggle/python docker image: https://github.com/kaggle/docker-python
+# For example, here's several helpful packages to load in 
+
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+
+# Input data files are available in the "../input/" directory.
+# For example, running this (by clicking run or pressing Shift+Enter) will list the files in the input directory
+
+import os
+print(os.listdir("../input"))
+import matplotlib.pyplot as plt
+
+# Any results you write to the current directory are saved as output.
+admission_file = ("../input/Admission_Predict_Ver1.1.csv")
+admission_data=pd.read_csv(admission_file)
+#The dataset contains several parameters which are considered important during the application for Masters Programs. 
+#The parameters included are : 1. GRE Scores ( out of 340 ) 2. TOEFL Scores ( out of 120 ) 3. University Rating 
+#( out of 5 ) 4. Statement of Purpose and Letter of Recommendation Strength ( out of 5 ) 
+#5. Undergraduate GPA ( out of 10 ) 6. Research Experience ( either 0 or 1 ) 7. Chance of Admit ( ranging from 0 to 1 )
+admission_data.head()
+#other way to get first 5 rows
+admission_data.iloc[0:5,:]
+
+admission_data.tail()
+admission_data.describe()
+#correlation
+#admission_data['GRE Score'].corr(admission_data['Chance of Admit'])
+#admission_data.drop['Serial No.']
+admission_data.corr()
+#higher correlations: gre and toefl, cgpa, chance of admit; toefl and cgpa, chance of admit
+#cgpa and chance of admit
+#See list of unique values of GRE Score
+admission_data['GRE Score'].unique()
+#See list of unique values
+admission_data['TOEFL Score'].unique()
+# draw a histogram (shortcut to features of matplotlib/pylab packages)
+import pylab as P
+admission_data['GRE Score'].hist()
+P.show()
+# draw a histogram (shortcut to features of matplotlib/pylab packages)
+import pylab as P
+admission_data['TOEFL Score'].hist()
+P.show()
+# draw a histogram (shortcut to features of matplotlib/pylab packages)
+import pylab as P
+admission_data['CGPA'].hist()
+P.show()
+# draw a histogram (shortcut to features of matplotlib/pylab packages)
+import pylab as P
+admission_data['SOP'].hist()
+P.show()
+#boxplot
+admission_data.boxplot(column='GRE Score')
+#boxplot
+admission_data.boxplot(column='TOEFL Score')
+#boxplot
+admission_data.boxplot(column='CGPA')
+#remove spaces and caps in headers, then check that everything was removed correctly
+admission_data.columns = admission_data.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('(', '').str.replace(')', '')
+admission_data.head()
+#boxplot
+admission_data.boxplot(column='chance_of_admit')
+#values skew toward acceptance (average is over 70%)\
+# draw a histogram (shortcut to features of matplotlib/pylab packages)
+import pylab as P
+admission_data['chance_of_admit'].hist()
+P.show()
+#note it skews much more towards being admitted
+#boxplot one way to create it
+bxplt= admission_data.boxplot(column='chance_of_admit', by = 'cgpa')
+xticks = [10,30,50, 70, 90, 110, 130, 150, 170, 190]
+bxplt.xaxis.set_ticks(xticks)
+bxplt.set_xticklabels(xticks, fontsize=16)
+
+#boxplot using matlib
+admission_data.boxplot(by=['chance_of_admit'], column=['cgpa'])
+# set your own proper title
+plt.title('Boxplot of CGPA grouped by Admit Chance')
+# get rid of the automatic 'Boxplot grouped by group_by_column_name' title
+plt.suptitle("")
+# Customize x tick lables
+x = [1]
+# create an index for each tick position
+
+plt.xticks(range(0, 75, 10), fontsize=14)
+
