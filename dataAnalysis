@@ -4,6 +4,7 @@
 
 import numpy as np # linear algebra
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+from pandas.plotting import scatter_matrix
 
 # Input data files are available in the "../input/" directory.
 # For example, running this (by clicking run or pressing Shift+Enter) will list the files in the input directory
@@ -85,4 +86,6 @@ x = [1]
 # create an index for each tick position
 
 plt.xticks(range(0, 75, 10), fontsize=14)
-
+# scatter plot matrix
+scatter_matrix(admission_data)
+plt.show()
