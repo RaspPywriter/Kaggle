@@ -1,0 +1,100 @@
+# This Python 3 environment comes with many helpful analytics libraries installed
+# It is defined by the kaggle/python docker image: https://github.com/kaggle/docker-python
+# For example, here's several helpful packages to load in 
+
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+
+# Input data files are available in the "../input/" directory.
+# For example, running this (by clicking run or pressing Shift+Enter) will list the files in the input directory
+
+
+import os
+print(os.listdir("../input"))
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.tree import export_graphviz  
+from sklearn import tree
+
+# Any results you write to the current directory are saved as output.
+#There are two main kinds of tree models, classification and regression. Each leaf represents a
+#class label and the branches from that leaf represent the outcome from that label. For example
+#if the label is age and the categories (labels) are over 18 and under 18 the two leaves would be
+#true and false. The main difference between classification and regression is in regression the 
+#variable can take continuous values (ex: prices) while classification the variables can be
+#categorical so binary values (ex: gender: m/f = 0/1).
+
+train_data = pd.read_csv('../input/train.csv')
+#show first 5 rows
+train_data.head()
+ train_data = train_data.drop(['Cabin', 'Fare'], axis=1)
+ train_data = train_data.drop(['Ticket'], axis=1)
+
+train_data = train_data.drop(['PassengerId'], axis=1)
+train_data = train_data.drop(['Embarked'], axis=1)
+train_data = train_data.drop(['Name'], axis=1)
+train_data[["Sex", "Survived"]].groupby(['Sex'], as_index=False).mean().sort_values(by='Survived', ascending=False)
+train_data.dropna(how='any', inplace=True)
+X_train = train_data.dropna()
+X_train = train_data.drop(['Survived'], axis=1)
+#map male to 0
+train_data.loc[train_data['Sex'] == 'male', 'Sex'] = 0
+
+#map female to 1
+train_data.loc[train_data['Sex'] == 'female', 'Sex'] = 1
+
+#set Y_train to the labels
+Y_train = train_data["Survived"]
+
+X_train.describe()
+
+test_data = pd.read_csv('../input/test.csv')
+test_data.head()
+
+test_data  = test_data.drop(['Name'], axis=1)
+test_data  = test_data.drop(['Ticket'], axis=1)
+test_data = test_data.drop(['Cabin'], axis=1)
+test_data = test_data.drop(['Embarked'], axis=1)
+test_data = test_data.drop(['PassengerId'], axis=1)
+test_data = test_data.drop(['Fare'], axis=1)
+test_data.loc[test_data['Sex'] == 'male', 'Sex'] = 0
+test_data.loc[test_data['Sex'] == 'female', 'Sex'] = 1
+test_data.describe()
+test_data['Age']= test_data['Age'].fillna('30.2')
+X_train.loc[X_train['Sex'] == 'male', 'Sex'] = 0
+X_train.loc[X_train['Sex'] == 'female', 'Sex'] = 1
+
+decTree = DecisionTreeRegressor(random_state=1)
+#fit model to training data
+decTree.fit(X_train, Y_train)
+print("Making predictions for the first 5 passengers")
+#print(X_train.head())
+print("The predictions are")
+print(decTree.predict(X_train.head()))
+#print("Full prediction")
+#print(decTree.predict(X_train))
+print("The final predictions are: ")
+#decTree.predict(test_data)
+smallEx = X_train
+smallLabel = Y_train
+smallEx = smallEx.drop(['Pclass'], axis=1)
+smallEx = smallEx.drop(['Sex'], axis=1)
+smallEx = smallEx.drop(['SibSp'], axis=1)
+smallEx = smallEx.drop(['Parch'], axis=1)
+test = decTree.fit(smallEx, smallLabel)
+print("Making predictions for the first 5 passengers")
+print("The predictions are")
+print(decTree.predict(smallEx.head()))
+#Show tree for age
+clf = tree.DecisionTreeClassifier()
+clf = clf.fit(smallEx, smallLabel)
+export_graphviz(clf, out_file='tree.dot', feature_names=['Age'])
+!dot -Tpng tree.dot -o tree_limited.png -Gdpi=600
+
+from IPython.display import Image
+Image(filename = 'tree_limited.png')
+
+#show tree for gender
+export_graphviz(clf, out_file='tree2.dot', feature_names=['Sex'])
+!dot -Tpng tree2.dot -o tree_limited2.png -Gdpi=600
+from IPython.display import Image
+Image(filename = 'tree_limited2.png')
