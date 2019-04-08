@@ -1,0 +1,84 @@
+# This Python 3 environment comes with many helpful analytics libraries installed
+# It is defined by the kaggle/python docker image: https://github.com/kaggle/docker-python
+# For example, here's several helpful packages to load in 
+
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+
+# Input data files are available in the "../input/" directory.
+# For example, running this (by clicking run or pressing Shift+Enter) will list the files in the input directory
+
+import os
+print(os.listdir("../input"))
+import matplotlib.pyplot as plt
+from os import path
+from PIL import Image
+from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
+
+# Any results you write to the current directory are saved as output.
+data = pd.read_csv('../input/mbti_1.csv')
+
+#get text from first post
+text = data.posts[0]
+#wordcloud of first post
+wordcloud = WordCloud().generate(text)
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis("off")
+plt.show()
+#first 1000 posts
+fullText = data.posts[1000]
+wordcloud = WordCloud().generate(fullText)
+
+# Display the generated image:
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis("off")
+plt.show()
+#group by briggs type
+descType = data.groupby("type")
+descType.describe()
+#get unique list of values in type column
+names = data['type'].unique()
+print(names)
+enfj = " ".join(review for review in data[data["type"]=="ENFJ"].posts)
+enfp = " ".join(review for review in data[data["type"]=="ENFP"].posts)
+entj = " ".join(review for review in data[data["type"]=="ENTJ"].posts)
+entp = " ".join(review for review in data[data["type"]=="ENTP"].posts)
+enfj = " ".join(review for review in data[data["type"]=="ENFJ"].posts)
+esfp= " ".join(review for review in data[data["type"]=="ESFP"].posts)
+
+stopwords = set(STOPWORDS)
+stopwords.update(["wp", "go", "really", "much", "why", "youtube", "know", "want", "tumblr", "great", "say", "well", "people", "INFJ", "will", "something", "way", "sure", "especially"])
+#update stopwords
+stopwords.update(["ENFJ", "INFP", "still", "though", "alway", "through", "lot", "ENFP","time", "love", "type", "one", "even", "someone", "thing", "make", "now", "see", "things", "feel", "think"])
+#make word clouds for each type
+names = data['type'].unique()
+for name in names:
+    for index, row in data.iterrows():
+        nameReturn = "".join(review for review in data[data["type"]== name].posts)
+        #print(name)
+        #print(name)
+wordcloud = WordCloud(stopwords=stopwords).generate(nameReturn)
+#print(nameReturn)
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis("off")
+plt.show()
+
+#ENFJ wordcloud
+wordcloud = WordCloud(stopwords=stopwords).generate(enfj)
+
+# updated wordcloud of 1000 posts
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis("off")
+plt.show()
+
+#enfp wordcloud
+wordcloud = WordCloud(stopwords=stopwords).generate(enfp)
+
+# updated wordcloud of 1000 posts
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis("off")
+plt.show()
+
+#get value of each type
+data["type"].value_counts()
+data["type"].value_counts().plot(kind="bar")
