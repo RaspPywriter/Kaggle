@@ -17,64 +17,68 @@ from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 
 # Any results you write to the current directory are saved as output.
 data = pd.read_csv('../input/mbti_1.csv')
+#get first 5 rows of data
+data.head()
 
 #get text from first post
 text = data.posts[0]
+
 #wordcloud of first post
 wordcloud = WordCloud().generate(text)
 plt.imshow(wordcloud, interpolation='bilinear')
 plt.axis("off")
 plt.show()
+
 #first 1000 posts
 fullText = data.posts[1000]
 wordcloud = WordCloud().generate(fullText)
-
-# Display the generated image:
 plt.imshow(wordcloud, interpolation='bilinear')
 plt.axis("off")
 plt.show()
+
+#gives counts/stats for data set
+data.describe()
+
 #group by briggs type
 descType = data.groupby("type")
+
+#describe by type
 descType.describe()
+
 #get unique list of values in type column
 names = data['type'].unique()
 print(names)
+
+#to get posts by type
 enfj = " ".join(review for review in data[data["type"]=="ENFJ"].posts)
-enfp = " ".join(review for review in data[data["type"]=="ENFP"].posts)
-entj = " ".join(review for review in data[data["type"]=="ENTJ"].posts)
-entp = " ".join(review for review in data[data["type"]=="ENTP"].posts)
-enfj = " ".join(review for review in data[data["type"]=="ENFJ"].posts)
-esfp= " ".join(review for review in data[data["type"]=="ESFP"].posts)
 
 stopwords = set(STOPWORDS)
-stopwords.update(["wp", "go", "really", "much", "why", "youtube", "know", "want", "tumblr", "great", "say", "well", "people", "INFJ", "will", "something", "way", "sure", "especially"])
+#add all the names of the types 
+stopwords.update(names)
+stopwords.update(['wp', 'go', 'really', 'much', 'why', 'youtube', 
+                  'know', 'want', 'tumblr', 'great', 'say', 'well', 'people',
+                  'will', 'something', 'way', 'sure', 'especially', 'Thank', 'friend', 'good'])
 #update stopwords
-stopwords.update(["ENFJ", "INFP", "still", "though", "alway", "through", "lot", "ENFP","time", "love", "type", "one", "even", "someone", "thing", "make", "now", "see", "things", "feel", "think"])
-#make word clouds for each type
+stopwords.update(['still', 'though', 'always', 'through', 'lot', 'time', 'love', 
+'type', 'one', 'even', 'someone', 'thing','make', 'now', 'see', 'things', 'feel', 'think'])
+print(stopwords)
+
+#make word clouds for each type - get each type - then 
 names = data['type'].unique()
 for name in names:
-    for index, row in data.iterrows():
-        nameReturn = "".join(review for review in data[data["type"]== name].posts)
-        #print(name)
-        #print(name)
-wordcloud = WordCloud(stopwords=stopwords).generate(nameReturn)
-#print(nameReturn)
-plt.imshow(wordcloud, interpolation='bilinear')
-plt.axis("off")
-plt.show()
-
-#ENFJ wordcloud
+    #filter by type
+    specRows = data['type'] == name
+    #combine the rows by type
+    nameReturn = "".join(post for post in data[data["type"]== name].posts)
+    print(name)
+    wordcloud = WordCloud(stopwords=stopwords).generate(nameReturn)
+    plt.imshow(wordcloud, interpolation='bilinear')
+    plt.axis("off")
+    plt.show()
+    
+ #ENFJ wordcloud
 wordcloud = WordCloud(stopwords=stopwords).generate(enfj)
-
-# updated wordcloud of 1000 posts
-plt.imshow(wordcloud, interpolation='bilinear')
-plt.axis("off")
-plt.show()
-
-#enfp wordcloud
-wordcloud = WordCloud(stopwords=stopwords).generate(enfp)
-
-# updated wordcloud of 1000 posts
+# example of one word cloud
 plt.imshow(wordcloud, interpolation='bilinear')
 plt.axis("off")
 plt.show()
