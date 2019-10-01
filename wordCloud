@@ -16,13 +16,13 @@ from PIL import Image
 from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 
 # Any results you write to the current directory are saved as output.
+
 data = pd.read_csv('../input/mbti_1.csv')
 #get first 5 rows of data
 data.head()
 
 #get text from first post
 text = data.posts[0]
-
 #wordcloud of first post
 wordcloud = WordCloud().generate(text)
 plt.imshow(wordcloud, interpolation='bilinear')
@@ -32,57 +32,56 @@ plt.show()
 #first 1000 posts
 fullText = data.posts[1000]
 wordcloud = WordCloud().generate(fullText)
+
+# Display the generated image:
 plt.imshow(wordcloud, interpolation='bilinear')
 plt.axis("off")
 plt.show()
 
 #gives counts/stats for data set
 data.describe()
-
+type	posts
+count	8675	8675
+unique	16	8675
+top	INFP	'One of the reason I also thought he could be ...
+freq	1832	1
 #group by briggs type
 descType = data.groupby("type")
-
 #describe by type
 descType.describe()
 
 #get unique list of values in type column
 names = data['type'].unique()
 print(names)
-
+['INFJ' 'ENTP' 'INTP' 'INTJ' 'ENTJ' 'ENFJ' 'INFP' 'ENFP' 'ISFP' 'ISTP'
+ 'ISFJ' 'ISTJ' 'ESTP' 'ESFP' 'ESTJ' 'ESFJ']
 #to get posts by type
 enfj = " ".join(review for review in data[data["type"]=="ENFJ"].posts)
-
+#Remove all of the most common words, including the different personality types - 
+#to see what kinds of words the groups use
 stopwords = set(STOPWORDS)
 #add all the names of the types 
 stopwords.update(names)
 stopwords.update(['wp', 'go', 'really', 'much', 'why', 'youtube', 
                   'know', 'want', 'tumblr', 'great', 'say', 'well', 'people',
                   'will', 'something', 'way', 'sure', 'especially', 'Thank', 'friend', 'good'])
+
 #update stopwords
 stopwords.update(['still', 'though', 'always', 'through', 'lot', 'time', 'love', 
 'type', 'one', 'even', 'someone', 'thing','make', 'now', 'see', 'things', 'feel', 'think'])
-print(stopwords)
-
-#make word clouds for each type - get each type - then 
+#make word clouds for each personality type - get each type - then filter by the 
+#personality type 
 names = data['type'].unique()
-for name in names:
-    #filter by type
-    specRows = data['type'] == name
-    #combine the rows by type
-    nameReturn = "".join(post for post in data[data["type"]== name].posts)
-    print(name)
-    wordcloud = WordCloud(stopwords=stopwords).generate(nameReturn)
-    plt.imshow(wordcloud, interpolation='bilinear')
-    plt.axis("off")
-    plt.show()
-    
- #ENFJ wordcloud
-wordcloud = WordCloud(stopwords=stopwords).generate(enfj)
-# example of one word cloud
-plt.imshow(wordcloud, interpolation='bilinear')
-plt.axis("off")
-plt.show()
-
-#get value of each type
-data["type"].value_counts()
-data["type"].value_counts().plot(kind="bar")
+i = 0
+while i < len(names):
+    for name in names:
+        #filter by type
+        specRows = data['type'] == name
+        #combine the rows by type
+        nameReturn = "".join(post for post in data[data["type"]== name].posts)
+        print(name)
+        wordcloud = WordCloud(stopwords=stopwords).generate(nameReturn)
+        plt.imshow(wordcloud, interpolation='bilinear')
+        plt.axis("off")
+        plt.show()
+        i +=1                                      
