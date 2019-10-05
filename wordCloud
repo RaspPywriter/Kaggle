@@ -17,71 +17,90 @@ from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 
 # Any results you write to the current directory are saved as output.
 
+# Now Load the data
 data = pd.read_csv('../input/mbti_1.csv')
-#get first 5 rows of data
+
+# Get the first 5 rows of data to see what it looks like
 data.head()
 
-#get text from first post
+# Gives counts/stats for data set
+data.describe()
+
+# Get text from first post
 text = data.posts[0]
-#wordcloud of first post
+
+# Wordcloud of first post
 wordcloud = WordCloud().generate(text)
 plt.imshow(wordcloud, interpolation='bilinear')
 plt.axis("off")
 plt.show()
 
-#first 1000 posts
+# First 1000 posts
 fullText = data.posts[1000]
-wordcloud = WordCloud().generate(fullText)
 
 # Display the generated image:
+wordcloud = WordCloud().generate(fullText)
 plt.imshow(wordcloud, interpolation='bilinear')
 plt.axis("off")
 plt.show()
 
-#gives counts/stats for data set
-data.describe()
-type	posts
-count	8675	8675
-unique	16	8675
-top	INFP	'One of the reason I also thought he could be ...
-freq	1832	1
-#group by briggs type
+# Group by Briggs personality type
 descType = data.groupby("type")
-#describe by type
+
+# Describe by type
 descType.describe()
 
-#get unique list of values in type column
+# Get unique list of values in type column
 names = data['type'].unique()
-print(names)
-['INFJ' 'ENTP' 'INTP' 'INTJ' 'ENTJ' 'ENFJ' 'INFP' 'ENFP' 'ISFP' 'ISTP'
- 'ISFJ' 'ISTJ' 'ESTP' 'ESFP' 'ESTJ' 'ESFJ']
-#to get posts by type
-enfj = " ".join(review for review in data[data["type"]=="ENFJ"].posts)
-#Remove all of the most common words, including the different personality types - 
-#to see what kinds of words the groups use
-stopwords = set(STOPWORDS)
-#add all the names of the types 
-stopwords.update(names)
-stopwords.update(['wp', 'go', 'really', 'much', 'why', 'youtube', 
-                  'know', 'want', 'tumblr', 'great', 'say', 'well', 'people',
-                  'will', 'something', 'way', 'sure', 'especially', 'Thank', 'friend', 'good'])
 
-#update stopwords
-stopwords.update(['still', 'though', 'always', 'through', 'lot', 'time', 'love', 
-'type', 'one', 'even', 'someone', 'thing','make', 'now', 'see', 'things', 'feel', 'think'])
-#make word clouds for each personality type - get each type - then filter by the 
-#personality type 
+# Example of getting posts by type
+enfj = " ".join(review for review in data[data["type"]=="ENFJ"].posts)
+
+# Remove stopwords
+stopWords = set(STOPWORDS)
+#add each lower case personality type as a stopword
+for word in names:
+    word.lower()
+    stopWords.add(word.lower())
+#Remove all of the most common words
+moreWords =['lot', 'time', 'love', 'actually', 'seem', 'need', 'infj', 'actually', 'pretty', 'sure', 'thought','type', 'one', 'even', 'someone', 'thing','make', 
+            'now', 'see', 'things', 'feel', 'think', 'i', 'people', 'know', '-', "much", "something", "will", "find", "go", "going", "need", 'still', 'though', 
+            'always', 'through', 'lot', 'time', 'love', 'really', 'want', 'way', 'never', 'find', 'say', 'it.', 'good', 'me.', 'many', 'first', 'wp', 'go', 
+            'really', 'much', 'why', 'youtube', 'right', 'know', 'want', 'tumblr', 'great', 'say', 'well', 'people', 'will', 'something', 'way', 'sure', 
+            'especially', 'thank', 'friend', 'good', 'ye', 'person', 'https', 'watch', 'yes', 'got', 'take', 'person', 'life', 'might', 'me', 'me,', 'around', 'best', 'try', 
+            'maybe', 'probability', 'usually', 'sometimes', 'trying', 'read', 'us', 'may', 'use', 'work', ':)', 'said', 'two', 'makes', 'little', 'quite','fe', 'u', 'intps', 'probably', 'made', 'it', 'seems', 'look', 'yeah',
+           'different', 'come', 'it,', 'friends', 'entps', 'different', 'esfjs', 'look', 'infjs', 'estps', 'kind', 'intjs', 'enfjs', 
+            'entjs', 'infps', 'every', 'long', 'tell', 'new', 'jpg']
+
+for i in moreWords:
+    stopWords.add(i)
+
+# Now make a bar chart of how often each personality type is mentioned in a post
+#get count of each personality type
+data["type"].value_counts()
+data["type"].value_counts().plot(kind="bar")
+
+
+# Make word clouds for each personality type - get each type - then filter by the personality type
 names = data['type'].unique()
 i = 0
 while i < len(names):
     for name in names:
+        print(name)
         #filter by type
         specRows = data['type'] == name
         #combine the rows by type
         nameReturn = "".join(post for post in data[data["type"]== name].posts)
-        print(name)
-        wordcloud = WordCloud(stopwords=stopwords).generate(nameReturn)
+        nameReturn = nameReturn.lower()
+        #make into a list to use comprehension to remove stopwords
+        split = nameReturn.split()
+        filtered_list = [word for word in split if word not in stopWords]
+        filtered_words = "".join(filtered_list)
+        #collocations = false to prevent duplicate words
+        wordcloud = WordCloud(stopwords=stopWords, collocations=False).generate(filtered_words)
         plt.imshow(wordcloud, interpolation='bilinear')
         plt.axis("off")
         plt.show()
         i +=1                                      
+        
+        
