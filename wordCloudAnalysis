@@ -1,0 +1,29 @@
+#This is a continution of the word cloud, now looking at more ways to analyze the data
+
+from collections import Counter 
+import nltk
+from nltk.corpus import stopwords
+names = data['type'].unique()
+t=0     
+while t < len(names):
+    for name in names:
+        #combine the rows by type
+        nameReturn = "".join(post for post in data[data["type"]== name].posts)
+        nameReturn = nameReturn.lower()
+        print('The top 10 words for the ' + name + ' personality are')
+        split = nameReturn.split() 
+        filtered_words = [word for word in split if word not in stopWords]
+        counter = Counter(filtered_words)
+        most_occur = counter.most_common(10) 
+        print(name)
+        df = pd.DataFrame(most_occur, columns = ['Word', 'Count'])
+        df.plot.bar(x='Word',y='Count', title=name)
+        print(most_occur)
+        t+=1
+        
+        
+# Create a graph to illustrate the count of top 10 most common words over all personality types
+counter = Counter(filtered_words)
+most_overall = counter.most_common(10) 
+df = pd.DataFrame(most_overall, columns = ['Word', 'Count'])
+df.plot.bar(x='Word',y='Count', title='Overall top words')
