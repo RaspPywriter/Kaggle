@@ -1,0 +1,109 @@
+# This Python 3 environment comes with many helpful analytics libraries installed
+# It is defined by the kaggle/python docker image: https://github.com/kaggle/docker-python
+# For example, here's several helpful packages to load in 
+
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+import matplotlib.pyplot as plt
+import bq_helper
+import seaborn as sns
+from bq_helper import BigQueryHelper
+
+# Input data files are available in the "../input/" directory.
+# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory
+
+import os
+for dirname, _, filenames in os.walk('/kaggle/input'):
+    for filename in filenames:
+        print(os.path.join(dirname, filename))
+
+# Any results you write to the current directory are saved as output.
+chicago_crime = bq_helper.BigQueryHelper(active_project="bigquery-public-data", dataset_name="chicago_crime")
+bq_assistant = BigQueryHelper("bigquery-public-data", "chicago_crime")
+
+**Run a query to get data to put into a dataframe**
+select_query = """SELECT date,district,primary_type,location_description,ward,arrest,domestic,community_area,year,latitude,longitude,location
+            FROM `bigquery-public-data.chicago_crime.crime`
+            LIMIT 800000"""
+crime_data = chicago_crime.query_to_pandas_safe(select_query)
+
+**Data exploration**
+**Look at first five crime data rows**
+print(crime_data.head())
+**Look at the last five rows**
+crime_data.tail()
+**Just look at date and primary_type**
+crime_data[['date', 'primary_type']]
+cd = crime_data
+**Convert the timestamp so the year can be graphed**********
+cd['date'] = pd.to_datetime(cd['date'])
+cd['year'] = cd['date'].dt.year
+
+# **Create a graph of all of the crimes**
+Note that there are too many and due to the scale, etc it doesn't look good
+cd['primary_type'].value_counts()
+cd['primary_type'].value_counts().plot(kind='barh')
+**Top 10 crimes total over entire date range**
+#This graph looks much clearer
+cd['primary_type'].value_counts()[:10].plot(kind='barh')
+#Now looking only at 2001 (the first year)
+first = cd[cd.year == 2001]
+print(first.count())
+**Create 2018 dataset**
+twentyEighteen = cd[cd.year == 2018]
+print(twentyEighteen.count())
+**2001 top 10 crimes**
+first['primary_type'].value_counts()[:10].plot(kind='barh')
+**2018 top 10 crimes**
+twentyEighteen['primary_type'].value_counts()[:10].plot(kind='barh')
+test=twentyEighteen['primary_type'].value_counts()[:10]
+
+**Graph all the different crimes from 2001 to 2019**
+#Notice how the number seem to decrease dramatically for all of the crimes**
+fig, ax = plt.subplots(figsize=(20,20))
+#ax.set_xticklabels([])
+ax.legend_ = None
+#draw()
+trial = cd.drop(['location_description', 'ward', 'domestic','community_area', 'district', 'longitude', 'arrest', 'latitude', 'location'], axis=1)
+trial.groupby(['year','primary_type']).count().unstack().plot(ax=ax)
+plt.show()
+
+#Theft over time
+fig, ax = plt.subplots(figsize=(10,8))
+trial = cd.drop(['location_description', 'ward', 'domestic','community_area', 'district', 'longitude', 'arrest', 'latitude', 'location'], axis=1)
+trial = trial.groupby(['primary_type'])
+theft = trial.get_group('THEFT') 
+theft.groupby(['year', 'primary_type']).count().unstack().plot(ax=ax)
+plt.show()
+
+#Battery over time
+fig, ax = plt.subplots(figsize=(10,8))
+trial = cd.drop(['location_description', 'ward', 'domestic','community_area', 'district', 'longitude', 'arrest', 'latitude', 'location'], axis=1)
+trial = trial.groupby(['primary_type'])
+theft = trial.get_group('BATTERY') 
+theft.groupby(['year', 'primary_type']).count().unstack().plot(ax=ax)
+plt.show()
+
+**Criminal Damage over time**
+fig, ax = plt.subplots(figsize=(10,8))
+trial = cd.drop(['location_description', 'ward', 'domestic','community_area', 'district', 'longitude', 'arrest', 'latitude', 'location'], axis=1)
+trial = trial.groupby(['primary_type'])
+theft = trial.get_group('CRIMINAL DAMAGE') 
+theft.groupby(['year', 'primary_type']).count().unstack().plot(ax=ax)
+plt.show()
+
+**Describe the data**
+cd.describe()
+**Create a graph of longitude and latitude**
+Also look at a histogram of all the crimes per district
+cd.plot(kind='scatter',x='longitude',y='latitude',color='red')
+plt.show()
+cd['district'].hist()
+plt.show()
+
+Graph of latitutde and longitude based upon offense
+crimeData = crime_data[crime_data.primary_type == 'CRIMINAL DAMAGE']
+crimeData.plot(kind='scatter',x='longitude',y='latitude',color='green')
+plt.show()
+crimeData["district"].hist()
+plt.show()
