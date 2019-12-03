@@ -107,3 +107,30 @@ crimeData.plot(kind='scatter',x='longitude',y='latitude',color='green')
 plt.show()
 crimeData["district"].hist()
 plt.show()
+
+weaponData = crime_data[crime_data.primary_type == 'THEFT']
+weaponData.plot(kind='scatter',x='longitude',y='latitude',color='green')
+plt.show()
+weaponData["district"].hist()
+plt.show()
+
+batteryData = crime_data[crime_data.primary_type == 'BATTERY']
+batteryData.plot(kind='scatter',x='longitude',y='latitude',color='green')
+plt.show()
+batteryData["district"].hist()
+plt.show()
+
+**Look at the districts in the first year**
+x =first["district"].hist()
+plt.show()
+y = twentyEighteen['district'].hist()
+plt.show()
+
+#Tried correlation using matplotlib
+plt.matshow(cd.corr())
+plt.show()
+#Used Seaborn for correlation**
+corr = cd.corr()
+sns.heatmap(corr, 
+            xticklabels=corr.columns.values,
+            yticklabels=corr.columns.values)
