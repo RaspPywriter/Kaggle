@@ -20,16 +20,86 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import nltk
 from nltk.corpus import stopwords
+
 data = pd.read_csv('../input/mbti_1.csv')
 #shape of data
 data.shape
-#show headings
+
+**Examine the data**
+Start by looking at the data, use data.head() to see what the actual data looks like. Note, the type is all upper case, while the posts have a lot of random spacing, characters, including websites.
 data.head()
-#create length column
+
+**Get statistical information enter data.info()**
+data.info()
+
+**Get the count of values, number of unique values, frequency using .describe()**
+data.describe()
+
+**Create a column that lists the length of each post**
 data['postLength'] = data['posts'].apply(len)
-data.head()
+
 #create a graph of post length to type
 lenToType = sns.FacetGrid(data=data, col='type')
-lenToType.map(plt.hist, 'postLength', bins=50)
+
+lenToType.map(plt.hist,'postLength', bins=10)
+**Now make a boxplot of the data, looking at the length of post by personality type**
+
 #boxplot of post length to type
 sns.boxplot(x='type', y='postLength', data=data)
+
+Sort data by type, see the extrovert types on top, and the introvert types on the bottom.
+data.groupby('type').mean().sort_values('type')
+
+Now sort by shortest to longest by postlength
+data.groupby('type').mean().sort_values('postLength')
+
+#plot the graph grouping by type and sort in descending order
+data.groupby('type').mean().sort_values("postLength").plot(kind='bar')
+
+data.groupby('type').mean().sort_values("postLength").plot(kind='line')
+
+**Use groupby in pandas to look at the counts more closely**
+group = data.groupby('type') 
+intj = group.get_group('INTJ')
+
+print(intj.mean())
+
+**Now use NLTK to analyze the data**
+from nltk.stem.snowball import SnowballStemmer
+import re
+stemmer = SnowballStemmer("english")
+
+def tokenize_and_stem(text):
+    # first tokenize by sentence, then by word to ensure that punctuation is caught as it's own token
+    tokens = [word for sent in nltk.sent_tokenize(text) for word in nltk.word_tokenize(sent)]
+    filtered_tokens = []
+    # filter out any tokens not containing letters (e.g., numeric tokens, raw punctuation)
+    for token in tokens:
+        if re.search('[a-zA-Z]', token):
+            filtered_tokens.append(token)
+    stems = [stemmer.stem(t) for t in filtered_tokens]
+    return stems
+
+
+def tokenize_only(text):
+    # first tokenize by sentence, then by word to ensure that punctuation is caught as it's own token
+    tokens = [word.lower() for sent in nltk.sent_tokenize(text) for word in nltk.word_tokenize(sent)]
+    filtered_tokens = []
+    # filter out any tokens not containing letters (e.g., numeric tokens, raw punctuation)
+    for token in tokens:
+        if re.search('[a-zA-Z]', token):
+            filtered_tokens.append(token)
+    return filtered_tokens
+    
+    
+totalvocab_stemmed = []
+totalvocab_tokenized = []
+for i in data['posts']:
+    allwords_stemmed = tokenize_and_stem(i) #for each item in 'synopses', tokenize/stem
+    totalvocab_stemmed.extend(allwords_stemmed) #extend the 'totalvocab_stemmed' list
+    
+    allwords_tokenized = tokenize_only(i)
+    totalvocab_tokenized.extend(allwords_tokenized)
+
+vocab_frame = data({'words': totalvocab_tokenized}, index = totalvocab_stemmed)
+print ('there are ' + str(vocab_frame.shape[0]) + ' items in vocab_frame')
