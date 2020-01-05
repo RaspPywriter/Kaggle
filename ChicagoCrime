@@ -144,3 +144,74 @@ ax.legend_ = None
 trial = cd.drop(['location_description', 'ward', 'domestic','community_area', 'district', 'longitude', 'arrest', 'latitude', 'location'], axis=1)
 trial.groupby(['year','primary_type']).count().unstack().plot(ax=ax)
 plt.show()
+
+While it is the highest it does show a sharp decline between 2001 and 2003, see the graph below which shows theft offenses over the years
+
+fig, ax = plt.subplots(figsize=(10,8))
+trial = cd.drop(['location_description', 'ward', 'domestic','community_area', 'district', 'longitude', 'arrest', 'latitude', 'location'], axis=1)
+trial = trial.groupby(['primary_type'])
+theft = trial.get_group('THEFT') 
+theft.groupby(['year', 'primary_type']).count().unstack().plot(ax=ax)
+plt.show()
+
+**Battery over time**
+A similar trend can be seen, there is a huge drop between 2001 and 2003
+
+fig, ax = plt.subplots(figsize=(10,8))
+trial = cd.drop(['location_description', 'ward', 'domestic','community_area', 'district', 'longitude', 'arrest', 'latitude', 'location'], axis=1)
+trial = trial.groupby(['primary_type'])
+theft = trial.get_group('BATTERY') 
+theft.groupby(['year', 'primary_type']).count().unstack().plot(ax=ax)
+plt.show()
+
+**Criminal Damage over time which also shows a large drop between 2001 and 2003**
+
+fig, ax = plt.subplots(figsize=(10,8))
+trial = cd.drop(['location_description', 'ward', 'domestic','community_area', 'district', 'longitude', 'arrest', 'latitude', 'location'], axis=1)
+trial = trial.groupby(['primary_type'])
+theft = trial.get_group('CRIMINAL DAMAGE') 
+theft.groupby(['year', 'primary_type']).count().unstack().plot(ax=ax)
+plt.show()
+
+**Describe the data**
+
+cd.describe()
+
+**Create a graph of longitude and latitude**
+Also look at a histogram of all the crimes per district,  the most crimes are reported in districts 4 -10
+
+cd.plot(kind='scatter',x='longitude',y='latitude',color='red')
+plt.show()
+cd['district'].hist()
+plt.show()
+
+Graph of latitutde and longitude based upon offense
+
+crimeData = crime_data[crime_data.primary_type == 'CRIMINAL DAMAGE']
+crimeData.plot(kind='scatter',x='longitude',y='latitude',color='green')
+plt.show()
+
+
+Below is a graph of weapons offenses, along with a histogram of districts with a count of their weapons offenses. Note districts 4 - 10 have the highest count, but 16 to 19 are not far behind.
+
+weaponData = crime_data[crime_data.primary_type == 'THEFT']
+weaponData.plot(kind='scatter',x='longitude',y='latitude',color='green')
+plt.show()
+weaponData["district"].hist()
+plt.show()
+
+Also I did a graph showing latitude and longitude and the histogram of districts for the count of battery offenses.
+
+batteryData = crime_data[crime_data.primary_type == 'BATTERY']
+batteryData.plot(kind='scatter',x='longitude',y='latitude',color='green')
+plt.show()
+batteryData["district"].hist()
+plt.show()
+
+**Look at the crime reported in the districts in the first year**
+The highest counts are in districts 6-8
+
+x =first["district"].hist()
+plt.show()
+
+
