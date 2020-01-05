@@ -214,4 +214,22 @@ The highest counts are in districts 6-8
 x =first["district"].hist()
 plt.show()
 
+The graph shows the count for crimes committed per district in 2018.  Districts 3 - 6 were the highest.
+y = twentyEighteen['district'].hist()
+plt.show()
 
+Tried correlation using matplotlib
+plt.matshow(cd.corr())
+plt.show()
+
+
+
+
+Used Seaborn for correlation**
+So negative correlations are distrct to latitutde/longitude, ward and community area and longitude also have negative correlations
+Positive correlations are ward to district, ward to latitude
+
+corr = cd.corr()
+sns.heatmap(corr, 
+            xticklabels=corr.columns.values,
+            yticklabels=corr.columns.values)
