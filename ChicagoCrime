@@ -21,45 +21,122 @@ for dirname, _, filenames in os.walk('/kaggle/input'):
 chicago_crime = bq_helper.BigQueryHelper(active_project="bigquery-public-data", dataset_name="chicago_crime")
 bq_assistant = BigQueryHelper("bigquery-public-data", "chicago_crime")
 
-**Run a query to get data to put into a dataframe**
 select_query = """SELECT date,district,primary_type,location_description,ward,arrest,domestic,community_area,year,latitude,longitude,location
             FROM `bigquery-public-data.chicago_crime.crime`
-            LIMIT 800000"""
+            LIMIT 300000"""
 crime_data = chicago_crime.query_to_pandas_safe(select_query)
 
-**Data exploration**
-**Look at first five crime data rows**
 print(crime_data.head())
-**Look at the last five rows**
+
+**Look at the last 5 rows**
 crime_data.tail()
-**Just look at date and primary_type**
+**Get sample of random values** I'm most curious about the crime type so I'll explore that below.
+
+crime_data.sample(10)
+
+**Sample using group by**
+**This gives a count of the primary_type
+**This gives a count of how many of each crime was commited**
+
+crimeType = crime_data.groupby("primary_type")["district"].count()
+print(crimeType)
+
+**The above list is confusing, I had to keep checking to see which is highest, so now I went back and sorted it**
+**So theft and battery are reported most frequently**
+
+crimeTypeSort = crime_data.groupby("primary_type")["district"].count().nlargest(20)
+print(crimeTypeSort)
+
+**Now I'd like to see this in a pie chart - but what a mistake to use top 20! It's impossible to see, so I'll try to 
+use top 10 after this**
+
+plot = crimeTypeSort.plot.pie(figsize=(10, 10))
+
+**Top 10 most frequently reported crimes**
+
+top10 = crime_data.groupby("primary_type")["district"].count().nlargest(10)
+
+plot = top10.plot.pie(figsize=(6, 6))
+
+**List of crimes by year**
+
+crimeTypeYear = crime_data.groupby("year")["primary_type"].count()
+print(crimeTypeYear)
+
+**Just look at date and primary_type from the data**
+
 crime_data[['date', 'primary_type']]
+
 cd = crime_data
-**Convert the timestamp so the year can be graphed**********
+
+**Convert the timestamp so the year can be graphed**
+
 cd['date'] = pd.to_datetime(cd['date'])
 cd['year'] = cd['date'].dt.year
 
-# **Create a graph of all of the crimes**
-Note that there are too many and due to the scale, etc it doesn't look good
+
+# **Create a graph of all of reported crimes**
+Battery and theft are at the top of the list.
+
 cd['primary_type'].value_counts()
-cd['primary_type'].value_counts().plot(kind='barh')
-**Top 10 crimes total over entire date range**
-#This graph looks much clearer
+cd['primary_type'].value_counts().plot.barh(x='crimes', y='count', figsize=(10, 10))
+
+**Now focus on the Top 10 crimes total over entire date range**
+
+total = cd['primary_type'].value_counts()[:20]
 cd['primary_type'].value_counts()[:10].plot(kind='barh')
-#Now looking only at 2001 (the first year)
+
+
+**Now looking only at 2001 (the first year)** returning the number of entries
+
 first = cd[cd.year == 2001]
 print(first.count())
+last = cd[cd.year ==2018]
+
+Now let's look at the top 20 crimes committed in 2001.
+
+firstGraph = first['primary_type'].value_counts()[:20]
+first['primary_type'].value_counts()[:20].plot(kind="barh")
+lastGraph = last['primary_type'].value_counts()[:20]
+
+
+**Comparing 2018 to 2001, this is a huge difference, there might be less data so let's check 2017**
+
+ax = lastGraph.plot()
+firstGraph.plot(ax=ax)
+ax.legend(["2001", "2018"]);
+
+
+2017 vs 2001
+
+yr2017 = cd[cd.year == 2017]
+yr2017Graph = yr2017['primary_type'].value_counts()[:20]
+ax = yr2017Graph.plot()
+firstGraph.plot(ax=ax)
+ax.legend(["2001", "2017"]);
+
+Just checking the difference between 2017 and 2018, looks like they have a very similar rate, There are more thefts in 2018, and less criminal damage in 2018, but otherwise, the numbers between 2017 and 2018 look pretty similar.
+
+ax = lastGraph.plot()
+yr2017Graph.plot(ax=ax, kind="bar")
+ax.legend(["2018", "2017"])
+
 **Create 2018 dataset**
+
 twentyEighteen = cd[cd.year == 2018]
 print(twentyEighteen.count())
+
 **2001 top 10 crimes**
-first['primary_type'].value_counts()[:10].plot(kind='barh')
+first['primary_type'].value_counts()[:20].plot(kind='barh')
+
 **2018 top 10 crimes**
+
 twentyEighteen['primary_type'].value_counts()[:10].plot(kind='barh')
 test=twentyEighteen['primary_type'].value_counts()[:10]
 
 **Graph all the different crimes from 2001 to 2019**
-#Notice how the number seem to decrease dramatically for all of the crimes**
+Notice how the number seem to decrease dramatically for all of the crimes**
+
 fig, ax = plt.subplots(figsize=(20,20))
 #ax.set_xticklabels([])
 ax.legend_ = None
@@ -67,70 +144,3 @@ ax.legend_ = None
 trial = cd.drop(['location_description', 'ward', 'domestic','community_area', 'district', 'longitude', 'arrest', 'latitude', 'location'], axis=1)
 trial.groupby(['year','primary_type']).count().unstack().plot(ax=ax)
 plt.show()
-
-#Theft over time
-fig, ax = plt.subplots(figsize=(10,8))
-trial = cd.drop(['location_description', 'ward', 'domestic','community_area', 'district', 'longitude', 'arrest', 'latitude', 'location'], axis=1)
-trial = trial.groupby(['primary_type'])
-theft = trial.get_group('THEFT') 
-theft.groupby(['year', 'primary_type']).count().unstack().plot(ax=ax)
-plt.show()
-
-#Battery over time
-fig, ax = plt.subplots(figsize=(10,8))
-trial = cd.drop(['location_description', 'ward', 'domestic','community_area', 'district', 'longitude', 'arrest', 'latitude', 'location'], axis=1)
-trial = trial.groupby(['primary_type'])
-theft = trial.get_group('BATTERY') 
-theft.groupby(['year', 'primary_type']).count().unstack().plot(ax=ax)
-plt.show()
-
-**Criminal Damage over time**
-fig, ax = plt.subplots(figsize=(10,8))
-trial = cd.drop(['location_description', 'ward', 'domestic','community_area', 'district', 'longitude', 'arrest', 'latitude', 'location'], axis=1)
-trial = trial.groupby(['primary_type'])
-theft = trial.get_group('CRIMINAL DAMAGE') 
-theft.groupby(['year', 'primary_type']).count().unstack().plot(ax=ax)
-plt.show()
-
-**Describe the data**
-cd.describe()
-**Create a graph of longitude and latitude**
-Also look at a histogram of all the crimes per district
-cd.plot(kind='scatter',x='longitude',y='latitude',color='red')
-plt.show()
-cd['district'].hist()
-plt.show()
-
-Graph of latitutde and longitude based upon offense
-crimeData = crime_data[crime_data.primary_type == 'CRIMINAL DAMAGE']
-crimeData.plot(kind='scatter',x='longitude',y='latitude',color='green')
-plt.show()
-crimeData["district"].hist()
-plt.show()
-
-weaponData = crime_data[crime_data.primary_type == 'THEFT']
-weaponData.plot(kind='scatter',x='longitude',y='latitude',color='green')
-plt.show()
-weaponData["district"].hist()
-plt.show()
-
-batteryData = crime_data[crime_data.primary_type == 'BATTERY']
-batteryData.plot(kind='scatter',x='longitude',y='latitude',color='green')
-plt.show()
-batteryData["district"].hist()
-plt.show()
-
-**Look at the districts in the first year**
-x =first["district"].hist()
-plt.show()
-y = twentyEighteen['district'].hist()
-plt.show()
-
-#Tried correlation using matplotlib
-plt.matshow(cd.corr())
-plt.show()
-#Used Seaborn for correlation**
-corr = cd.corr()
-sns.heatmap(corr, 
-            xticklabels=corr.columns.values,
-            yticklabels=corr.columns.values)
