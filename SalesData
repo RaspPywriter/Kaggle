@@ -1,0 +1,107 @@
+# This Python 3 environment comes with many helpful analytics libraries installed
+# It is defined by the kaggle/python docker image: https://github.com/kaggle/docker-python
+# For example, here's several helpful packages to load in 
+
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+import pandas_profiling 
+
+
+# Input data files are available in the "../input/" directory.
+# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory
+
+import os
+for dirname, _, filenames in os.walk('/kaggle/input'):
+    for filename in filenames:
+        print(os.path.join(dirname, filename))
+
+# Any results you write to the current directory are saved as output.
+/kaggle/input/supermarket-sales/supermarket_sales - Sheet1.csv
+Here is the information about the data
+Attribute information
+Invoice id: Computer generated sales slip invoice identification number
+Branch: Branch of supercenter (3 branches are available identified by A, B and C).
+City: Location of supercenters
+Customer type: Members for customers using member card and Normal for without member card.
+Gender: Gender of customer
+Product line: General item categorization - Electronic accessories, Fashion accessories, Food and beverages, Health and beauty, Home and lifestyle, Sports and travel
+Unit price: Price of each product in US dollars
+Quantity: Number of products purchased by customer
+Tax: 5% tax fee for customer buying
+Total: Total price including tax
+Date: Date of purchase (Record available from January 2019 to March 2019)
+Time: Purchase time (10am to 9pm)
+Payment: Payment used by customer – Cash, Credit card and Ewallet
+COGS: Cost of goods sold
+Gross margin percentage: This is a
+Gross income: Gross income
+Rating: Customer stratification rating on their overall shopping experience (On a scale of 1 to 10)
+I will answer a few questions about this data to start:1. What do members vs non-members buy? 2. What do males vs females buy?3. Stats on the people who buy the most
+
+Before answering the questions above, I'm going to import the data then get basic stats information
+
+sales = pd.read_csv('../input/supermarket-sales/supermarket_sales - Sheet1.csv')
+I will get the shape of the dataset
+
+sales.shape
+
+Now to see the first five and last five values in the data set
+
+sales.head()
+
+Now I'm trying the profile_report() to see what comes back for this dataset It shows the 17 variables and gives information about some of them. So date and time have a high cardinality (89 and 506 unique values, respectively).
+
+Total is highly correlated with tax, which makes sense the tax rate is 5% on the total. The data is about three stores, in three cities. Customer_types is divided into two: members and normal (non-members). It is split approximately evenly, as is gender. There are three payment options: cash, ewallet and credit card. Product_line has six categories. Some interesting information about the data is that Cost of Goods (cogs) is highly correlated with gross_income, in fact they are the same! So I will drop gross_income.
+
+sales.profile_report()
+
+Need to change the names of the columns to remove the spaces in order to run the analysis
+
+sales.columns = ['Invoice_ID', 'Branch', 'City', 'Customer_Types', 'Gender', 'Product_Line', 'Unit_Price', 'Quantity', 'Tax', 'Total', 'Date', 'Time', 'Payment', 'cogs', 'Gross_Margin_Percentage', 'Gross_Income','Rating']
+Now I'll remove Gross_Income
+
+sales = sales.drop(['Gross_Income'], axis=1)
+Group by members Get the count of each type
+
+members = sales.groupby("Customer_Types")["Total"].count()
+print(members)
+
+Now get the sales by each group
+
+totalSales = sales.groupby("Customer_Types")["Total"].sum()
+print(totalSales)
+
+Get the average sales per customer type. After running the analysis, members spend, on average, 327.79 and nonmembers spend 318.12
+
+salesPercent = (totalSales/members)
+print(salesPercent)
+
+Now let's see what each groups is buying
+memberSales = sales[sales.Customer_Types == 'Member']
+salesType = memberSales.groupby('Product_Line')['Customer_Types'].count()
+print(salesType)
+
+Now I'll compare to non-members
+nonMemberSales = sales[sales.Customer_Types == 'Normal']
+salesTypeNonMember = nonMemberSales.groupby('Product_Line')['Customer_Types'].count()
+print(salesTypeNonMember)
+
+Now I'll look at members/nonmembers at different stores
+salesMemberBranch = memberSales.groupby('Branch')['Customer_Types'].count()
+print(salesMemberBranch)
+
+salesNonMemberBranch = nonMemberSales.groupby('Branch')['Customer_Types'].count()
+print(salesNonMemberBranch)
+
+Now I'll see the difference in what males vs females spend at the stores
+Then I'll calculate the total of sales for each
+Group by Gender then get the total spent for each group
+sales.groupby("Gender").sum().sort_values("Total", ascending=False)
+Unit_Price	Quantity	Tax	Total	cogs	Gross_Margin_Percentage	Rating
+Gender							
+
+sales.groupby("Gender")["Total"].sum()
+#print(salesGender)
+
+Now I'll see the top 10 customers who spent the most
+sales.nlargest(10, 'Total')
