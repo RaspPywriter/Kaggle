@@ -36,3 +36,154 @@ notes.head()
 
 #Get the last 5 rows
 arrestsTotal.tail()
+
+#Finally get a random sample of 10 values
+arrestsTotal.sample(10)
+
+"""
+Now I will run describe on the dataset, which will return basic statistics about the data From this list, 
+I see the mean number of arrests is 6.56, but the highest is 69 arrests! I'm wondering about that! Looking at the arrests column, 
+the mean is 6, but the standard deviation is 9, and the range of arrests go from 0 to 69. 
+50% of the number of arrests are 3 or lower, and 75% are 8 or lower. So there is obviously at least one major outlier
+"""
+
+arrestsTotal.describe()
+
+"""
+So I would like to get started by looking at a histogram of each column I will start with season but it will be boring since it is just 
+the year, but this is a quick way to check that how many entries there are in each season, so they all about equal
+"""
+season= arrestsTotal['season']
+season.hist()
+
+#Next is week number There are some dips with fewer arrests during the middle of the season versus the most at the end and at the start
+week = arrestsTotal['week_num']
+week.hist()
+
+#Now to check the home_score variable
+homeScore = arrestsTotal['home_score']
+homeScore.hist()
+
+#Check the away score
+awayScore = arrestsTotal['away_score']
+awayScore.hist()
+
+#Finally I'll look at arrests
+arrestNo=arrestsTotal['arrests']
+arrestNo.hist()
+
+#I'd like to quickly get a count of arrests over 8 which represents the 25% of the data, so 227 rows are returned
+arrestsTotal[arrestsTotal['arrests'].gt(8)]
+
+#I can't resist and want to see the information about the 69 arrests, but I'll check over 50 and it's an interesting result! 
+#When Pittsburgh is the home team there are over 50 arrests, and there were 69 arrests twice! Both times Oakland at San Diego!
+arrestsTotal[arrestsTotal['arrests'].gt(50)]
+
+#So now I want to see greater than 30
+over30 = arrestsTotal[arrestsTotal['arrests'].gt(30)]
+arrestsTotal[arrestsTotal['arrests'].gt(30)]
+
+#Now I will examine the stadiums that have over 30 arrests.
+over30.groupby([ 'home_team', 'arrests']).count()
+
+"""
+Now I'll start with the first question: Which stadiums had the most arrests? The least? To solve this I'll examine the data 
+for the home team So I'd like to see a visual to plot all of the arrests. And again, given the data, the team with the most arrests 
+is San Diego. However, if you count the stadium, the Jets and Giants play at the same stadium, so Giants Stadium has the most arrests. 
+Detroit has the least - with zero arrests.
+"""
+homeStadiumArrests = arrestsTotal.groupby(['home_team']).agg({'arrests': 'sum'}).sort_values(by='arrests', ascending=False)
+print(homeStadiumArrests)
+
+"""
+The next question is are arrests more likely when the home team lost a game? To analyze this, I've made a new column to 
+arrestsCopy that holds the result of home score - away score, so if the number is negative, then the home team lost.
+"""
+arrestsCopy = arrestsTotal
+arrestsCopy['resultScore']=arrestsCopy.apply(lambda row: row.home_score - 
+                                  (row.away_score), axis = 1) 
+                                  
+#Now breakout the games where the home team lost and where the home team won And finally where there are ties
+
+homeStadiumLose = c[arrestsCopy['resultScore'].lt(0)]
+homeStatiumWin = arrestsCopy[arrestsCopy['resultScore'].gt(0)]
+homeStadiumTie = arrestsCopy[arrestsCopy['resultScore'].eq(0)]
+
+#Now get the total arrests for each category
+loss = homeStadiumLose.groupby(['home_team']).agg({'arrests': 'sum'}).sort_values(by='arrests', ascending=False)
+
+win = homeStatiumWin.groupby(['home_team']).agg({'arrests': 'sum'}).sort_values(by='arrests', ascending=False)
+tie = homeStadiumTie.groupby(['home_team']).agg({'arrests': 'sum'}).sort_values(by='arrests', ascending=False)
+
+#**Let's try printing the top 10 of each**
+print(loss[:10])
+print(win[:10])
+print(tie[:10])
+
+"""
+**Just looking at the results, it doesn't seem overwhelmingly evident, so let's make a visualization, but ignoring
+ties since there are only 4 ties**
+**It seems some stadiums will have slightly more arrests if they lose (San Diego, Giants Stadium, Pittsburgh) whereas 
+other stadiums will have more arrests (in some cases many more arrests) if they win (Green Bay, New England, Arizona and Denver)**
+"""
+
+ax = loss.sort_values(by='arrests', ascending=0)[:10].plot(kind='line', figsize=(10, 10), color='red', stacked=False, rot=90)
+win.sort_values(by='arrests', ascending=0)[:10].plot(ax=ax, kind='line', color='green', stacked=False, rot=90)
+
+ax.legend(["loss", "win"])
+"""
+**Now I will look at close games versus larger deficits, so close will be 6 or less points, not close will be 24 or more points, 
+This is arbitrary but I'll just start there**
+"""
+close =  arrestsCopy[arrestsCopy['resultScore'].between(-6, 6, inclusive=True)]
+notClose = arrestsCopy[arrestsCopy['resultScore'].le(-24) | arrestsCopy['resultScore'].gt(24)]
+                                                                        
+closeGraph = close.groupby(['home_team']).agg({'arrests': 'sum'}).sort_values(by='arrests', ascending=False)
+notCloseGraph = notClose.groupby(['home_team']).agg({'arrests': 'sum'}).sort_values(by='arrests', ascending=False)
+
+
+#Now let's graph the results which are very clear! Close games lead to more arrests when graphing the top 10, 
+# especially for the stadiums with the most arrests.
+
+ax = closeGraph.sort_values(by='arrests', ascending=0)[:10].plot(kind='line', figsize=(10, 10), color='green', stacked=False, rot=90)
+notCloseGraph.sort_values(by='arrests', ascending=0)[:10].plot(ax=ax, kind='line', color='red', stacked=False, rot=90)
+
+ax.legend(["close", "not close"])
+"""
+To see if some stadiums have an even number of arrests, I'll look at those not in the top 15, and we see Detriot is the only one where 
+there are the same number of arrests for close and not close games
+"""
+ax = closeGraph.sort_values(by='arrests', ascending=0)[15:].plot(kind='line', figsize=(10, 5), color='green', stacked=False, rot=90)
+notCloseGraph.sort_values(by='arrests', ascending=0)[15:].plot(ax=ax, kind='line', color='red', stacked=False, rot=90)
+
+ax.legend(["close", "not close"])
+
+"""
+**To determine if day of the week influences arrests, let's compare them, really it's unfair to compare Sunday, since most games are played then, but Monday and Thursday are comparable since 
+there is usually only one game each. Saturday is usually for playoffs and the numbers bear that out.**
+"""
+monArrests = len([x for x in arrestsTotal['day_of_week'] if 'Monday' in x])
+thursArrests = len([x for x in arrestsTotal['day_of_week'] if 'Thursday' in x])
+satArrests = len([x for x in arrestsTotal['day_of_week'] if 'Saturday' in x])
+sunArrests = len([x for x in arrestsTotal['day_of_week'] if 'Sunday' in x])
+print('The number of Monday arrests are: ' + str(monArrests))
+print('The number of Thursday arrests are: ' + str(thursArrests))
+print('The number of Saturday arrests are: ' + str(satArrests))
+print('The number of Sunday arrests are: ' + str(sunArrests))
+
+Now let's look at year over year for all teams to see if there is a trend, which it turns out 
+there are the same number approximately 200.
+
+yr2011 = arrestsTotal[arrestsTotal.season == 2011].count()
+yr2012 = arrestsTotal[arrestsTotal.season == 2012].count()
+yr2013 = arrestsTotal[arrestsTotal.season == 2013].count()
+yr2014 = arrestsTotal[arrestsTotal.season == 2014].count()
+yr2015 = arrestsTotal[arrestsTotal.season == 2015].count()
+print(yr2011['season'])
+print(yr2012['season'])
+print(yr2013['season'])
+print(yr2014['season'])
+print(yr2015['season'])
+
+
+
