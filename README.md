@@ -1,4 +1,6 @@
 # Kaggle Notebooks
-Titanic Notebook - First Notebook
+This is a collection of the notebooks I've created on Kaggle.
 
-#Housing Market
+
+# Titanic
+# Housing Market
